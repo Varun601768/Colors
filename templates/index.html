@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 4.5rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .container {
+            text-align: center;
+            flex: 1;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-bottom: 20px;
+        }
+        .img-fluid {
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            background-color: #fff;
+        }
+        #color-info {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 10px 0;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .footer a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Color Detection</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="mb-4">Upload an Image for Color Detection</h1>
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data" class="mb-3">
+            <input id="uploadInput" type="file" name="file" class="form-control mb-3" required onchange="previewImage(event)"/>
+            <button type="submit" class="btn btn-primary">Upload</button>
+            <button type="button" class="btn btn-danger ms-2" onclick="clearImage()">Clear</button>
+        </form>
+        <div id="imagePreview" class="image-preview">
+            {% if filename %}
+            <img id="image" src="/uploads/{{ filename }}" alt="Uploaded Image" class="img-fluid" onclick="identifyColor(event)"/>
+            {% endif %}
+        </div>
+        <p id="color-info"></p>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-dark">
+        <div class="container text-center">
+            <span class="text-muted">© 2024 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></span>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+    
+            // Check if a file is selected
+            var fileInput = document.getElementById('uploadInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file first!');
+                return;
+            }
+    
+            // Preview the selected image
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function() {
+                var imgElement = document.createElement('img');
+                imgElement.src = reader.result;
+                imgElement.classList.add('img-fluid');
+                imgElement.id = 'image';
+                imgElement.onclick = identifyColor; // Assign the color detection handler
+                document.getElementById('imagePreview').innerHTML = '';
+                document.getElementById('imagePreview').appendChild(imgElement);
+            };
+            reader.readAsDataURL(file);
+        });
+    
+        function clearImage() {
+            document.getElementById('uploadForm').reset(); // Clear the form
+            document.getElementById('imagePreview').innerHTML = ''; // Clear the preview area
+            document.getElementById('color-info').innerHTML = ''; // Clear color info
+        }
+    
+        function identifyColor(event) {
+            var imgElement = event.target;
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+            ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+            var x = event.offsetX;
+            var y = event.offsetY;
+            var imgData = ctx.getImageData(x, y, 1, 1).data;
+    
+            var rgb = `rgb(${imgData[0]}, ${imgData[1]}, ${imgData[2]})`;
+            var colorInfo = `R: ${imgData[0]}, G: ${imgData[1]}, B: ${imgData[2]}`;
+            document.getElementById('color-info').textContent = colorInfo;
+            document.getElementById('color-info').style.backgroundColor = rgb;
+            document.getElementById('color-info').style.color = (imgData[0] + imgData[1] + imgData[2] > 382) ? 'black' : 'white';
+            document.getElementById('color-info').style.padding = '10px';
+            document.getElementById('color-info').style.borderRadius = '5px';
+        }
+    </script>
+    
+    
+</body>
+</html>
